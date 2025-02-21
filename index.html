@@ -1,0 +1,270 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
+import { Dumbbell, Utensils, Moon } from 'lucide-react';
+
+const FitnessApp = () => {
+  const [formData, setFormData] = useState({
+    edad: '',
+    peso: '',
+    altura: '',
+    genero: '',
+    actividad: '',
+    objetivo: '',
+    deporte: '',
+    horasSueno: '',
+  });
+
+  const [recomendaciones, setRecomendaciones] = useState(null);
+
+  const calcularRecomendaciones = () => {
+    const { edad, peso, genero, objetivo, actividad } = formData;
+    let recomendacionesPersonalizadas = {
+      calorias: 0,
+      ejercicios: [],
+      alimentacion: [],
+      sueno: '',
+      adicionales: []
+    };
+
+    // Cálculo base de calorías (fórmula Harris-Benedict simplificada)
+    const edadNum = parseInt(edad);
+    const pesoNum = parseInt(peso);
+    let caloriaBase = genero === 'masculino' 
+      ? (10 * pesoNum + 625)
+      : (10 * pesoNum + 500);
+
+    // Ajuste por nivel de actividad
+    const factoresActividad = {
+      sedentario: 1.2,
+      ligero: 1.375,
+      moderado: 1.55,
+      intenso: 1.725,
+    };
+    caloriaBase *= factoresActividad[actividad] || 1.2;
+
+    // Ajuste por objetivo
+    if (objetivo === 'perdida') {
+      if (edadNum < 18) {
+        caloriaBase -= 100; // Déficit mínimo para menores
+      } else {
+        caloriaBase -= 500;
+      }
+    } else if (objetivo === 'ganancia') {
+      caloriaBase += 300;
+    }
+
+    // Generar recomendaciones de ejercicios personalizadas
+    const ejerciciosPorObjetivo = {
+      perdida: [
+        {
+          tipo: 'Cardio',
+          ejemplos: ['30 minutos de HIIT', '45 minutos de cardio en ayunas', 'Circuito de ejercicios'],
+          frecuencia: '4-5 veces por semana'
+        },
+        {
+          tipo: 'Pesas',
+          ejemplos: ['Rutina full body', 'Superseries', 'Circuito con pesos ligeros'],
+          frecuencia: '3-4 veces por semana'
+        }
+      ],
+      ganancia: [
+        {
+          tipo: 'Pesas',
+          ejemplos: ['Push/Pull/Legs', 'Rutina de fuerza 5x5', 'Ejercicios compuestos pesados'],
+          frecuencia: '4-5 veces por semana'
+        },
+        {
+          tipo: 'Cardio moderado',
+          ejemplos: ['20 minutos de caminata', 'Bicicleta suave'],
+          frecuencia: '2-3 veces por semana'
+        }
+      ],
+      mantenimiento: [
+        {
+          tipo: 'Mixto',
+          ejemplos: ['Combinación de pesas y cardio', 'Deportes recreativos', 'Yoga/Pilates'],
+          frecuencia: '3-4 veces por semana'
+        }
+      ]
+    };
+
+    // Recomendaciones de alimentación personalizadas
+    const alimentacionPorObjetivo = {
+      perdida: [
+        "Desayuno: Avena con proteína y frutas",
+        "Almuerzo: Pechuga de pollo con ensalada y quinoa",
+        "Cena: Pescado al horno con vegetales",
+        "Snacks: Frutas y frutos secos"
+      ],
+      ganancia: [
+        "Desayuno: Huevos revueltos con avena y plátano",
+        "Almuerzo: Arroz integral con carne y legumbres",
+        "Cena: Pasta integral con pavo y verduras",
+        "Snacks: Batido de proteínas con mantequilla de maní"
+      ],
+      mantenimiento: [
+        "Desayuno: Tostadas integrales con huevo y aguacate",
+        "Almuerzo: Bowl de arroz con proteína y vegetales",
+        "Cena: Wrap de pavo con vegetales",
+        "Snacks: Yogur con frutas"
+      ]
+    };
+
+    // Asignar recomendaciones
+    recomendacionesPersonalizadas.calorias = Math.round(caloriaBase);
+    recomendacionesPersonalizadas.ejercicios = ejerciciosPorObjetivo[objetivo] || ejerciciosPorObjetivo.mantenimiento;
+    recomendacionesPersonalizadas.alimentacion = alimentacionPorObjetivo[objetivo] || alimentacionPorObjetivo.mantenimiento;
+    recomendacionesPersonalizadas.sueno = edadNum < 18 ? "8-10 horas" : "7-9 horas";
+    
+    // Recomendaciones adicionales
+    recomendacionesPersonalizadas.adicionales = [
+      "Mantén un registro diario de tus comidas y entrenamientos",
+      "Hidratación: Bebe al menos 2-3 litros de agua al día",
+      "Considera suplementos básicos como proteína y multivitamínicos",
+      "Realiza estiramientos después de cada entrenamiento",
+      "Toma descansos activos entre series de ejercicios"
+    ];
+
+    setRecomendaciones(recomendacionesPersonalizadas);
+  };
+
+  return (
+    <div className="min-h-screen bg-green-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <Card className="bg-white shadow-lg mb-8">
+          <CardHeader className="bg-green-800 text-white">
+            <CardTitle className="text-2xl font-bold">Plan Personalizado de Fitness y Nutrición</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                type="number"
+                placeholder="Edad"
+                value={formData.edad}
+                onChange={(e) => setFormData({...formData, edad: e.target.value})}
+                className="border-green-300 focus:border-green-500"
+              />
+              <Input
+                type="number"
+                placeholder="Peso (kg)"
+                value={formData.peso}
+                onChange={(e) => setFormData({...formData, peso: e.target.value})}
+                className="border-green-300 focus:border-green-500"
+              />
+              <select
+                value={formData.genero}
+                onChange={(e) => setFormData({...formData, genero: e.target.value})}
+                className="border p-2 rounded-md border-green-300 focus:border-green-500"
+              >
+                <option value="">Selecciona género</option>
+                <option value="masculino">Masculino</option>
+                <option value="femenino">Femenino</option>
+              </select>
+              <select
+                value={formData.objetivo}
+                onChange={(e) => setFormData({...formData, objetivo: e.target.value})}
+                className="border p-2 rounded-md border-green-300 focus:border-green-500"
+              >
+                <option value="">Selecciona objetivo</option>
+                <option value="perdida">Pérdida de grasa</option>
+                <option value="ganancia">Ganancia muscular</option>
+                <option value="mantenimiento">Mantenimiento</option>
+              </select>
+              <select
+                value={formData.actividad}
+                onChange={(e) => setFormData({...formData, actividad: e.target.value})}
+                className="border p-2 rounded-md border-green-300 focus:border-green-500"
+              >
+                <option value="">Nivel de actividad</option>
+                <option value="sedentario">Sedentario</option>
+                <option value="ligero">Ligero</option>
+                <option value="moderado">Moderado</option>
+                <option value="intenso">Intenso</option>
+              </select>
+              <Input
+                type="text"
+                placeholder="Deporte que practicas"
+                value={formData.deporte}
+                onChange={(e) => setFormData({...formData, deporte: e.target.value})}
+                className="border-green-300 focus:border-green-500"
+              />
+            </div>
+            <Button 
+              onClick={calcularRecomendaciones}
+              className="mt-6 w-full bg-green-800 hover:bg-green-700 text-white"
+            >
+              Obtener Plan Personalizado
+            </Button>
+          </CardContent>
+        </Card>
+
+        {recomendaciones && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="bg-white shadow-lg">
+              <CardHeader className="bg-green-800 text-white">
+                <CardTitle className="flex items-center">
+                  <Dumbbell className="mr-2" />
+                  Entrenamiento
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <p className="font-bold">Calorías diarias: {recomendaciones.calorias}</p>
+                  {recomendaciones.ejercicios.map((ejercicio, index) => (
+                    <div key={index} className="border-b pb-4">
+                      <h4 className="font-semibold">{ejercicio.tipo}</h4>
+                      <p>Frecuencia: {ejercicio.frecuencia}</p>
+                      <ul className="list-disc pl-5">
+                        {ejercicio.ejemplos.map((ejemplo, i) => (
+                          <li key={i}>{ejemplo}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white shadow-lg">
+              <CardHeader className="bg-green-800 text-white">
+                <CardTitle className="flex items-center">
+                  <Utensils className="mr-2" />
+                  Nutrición
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {recomendaciones.alimentacion.map((comida, index) => (
+                    <p key={index} className="border-b pb-2">{comida}</p>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white shadow-lg md:col-span-2">
+              <CardHeader className="bg-green-800 text-white">
+                <CardTitle className="flex items-center">
+                  <Moon className="mr-2" />
+                  Recomendaciones Adicionales
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <p className="font-bold mb-4">Horas de sueño recomendadas: {recomendaciones.sueno}</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  {recomendaciones.adicionales.map((rec, index) => (
+                    <li key={index}>{rec}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FitnessApp;
